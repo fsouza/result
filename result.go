@@ -9,6 +9,33 @@ func Make[T any](value T, err error) Result[T] {
 	return Result[T]{Value: value, Err: err}
 }
 
+func (r *Result[T]) Take() (T, error) {
+	return r.Value, r.Err
+}
+
+func Map[T, U any](result Result[T], fn func(T) U) Result[U] {
+	if result.Err != nil {
+		return Result[U]{
+			Value: zero[U](),
+			Err:   result.Err,
+		}
+	}
+	return Result[U]{
+		Value: fn(result.Value),
+		Err:   nil,
+	}
+}
+
+func Bind[T, U any](result Result[T], fn func(T) Result[U]) Result[U] {
+	if result.Err != nil {
+		return Result[U]{
+			Value: zero[U](),
+			Err:   result.Err,
+		}
+	}
+	return fn(result.Value)
+}
+
 func Wrap[T, U any](f func(...T) (U, error)) func(...T) Result[U] {
 	return func(v ...T) Result[U] {
 		return Make(f(v...))
@@ -49,4 +76,9 @@ func Wrap6[T1, T2, T3, T4, T5, T6, U any](f func(T1, T2, T3, T4, T5, T6) (U, err
 	return func(v1 T1, v2 T2, v3 T3, v4 T4, v5 T5, v6 T6) Result[U] {
 		return Make(f(v1, v2, v3, v4, v5, v6))
 	}
+}
+
+func zero[T any]() T {
+	var z T
+	return z
 }
