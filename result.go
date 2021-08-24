@@ -9,7 +9,13 @@ func Make[T any](value T, err error) Result[T] {
 	return Result[T]{Value: value, Err: err}
 }
 
-func Wrap[T, U any](f func(T) (U, error)) func(T) Result[U] {
+func Wrap[T, U any](f func(...T) (U, error)) func(...T) Result[U] {
+	return func(v ...T) Result[U] {
+		return Make(f(v...))
+	}
+}
+
+func Wrap1[T, U any](f func(T) (U, error)) func(T) Result[U] {
 	return func(v T) Result[U] {
 		return Make(f(v))
 	}
